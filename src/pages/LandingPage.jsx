@@ -1,7 +1,45 @@
 import React from 'react'
 import { ArrowRightIcon, UserCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
+import { useWeb3 } from '../context/Web3Context'
+import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 
-const LandingPage = ({ onConnectWallet, walletAddress }) => {
+const LandingPage = () => {
+  const navigate = useNavigate()
+  const { connectWallet, account, isAdmin } = useWeb3()
+
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet()
+    } catch (error) {
+      console.error('Failed to connect wallet:', error)
+      toast.error('Failed to connect wallet')
+    }
+  }
+
+  const handleAdminLogin = async () => {
+    if (!account) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+    
+    if (!isAdmin) {
+      toast.error('This wallet is not authorized as admin')
+      return
+    }
+    
+    toast.success('Successfully authenticated as admin')
+    navigate('/dashboard')
+  }
+
+  const handleCompanyLogin = async () => {
+    if (!account) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+    navigate('/dashboard')
+  }
+
   return (
     <div className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-b from-green-light/30 to-white font-body">
       {/* Navigation */}
@@ -11,15 +49,15 @@ const LandingPage = ({ onConnectWallet, walletAddress }) => {
             <img className="h-12 w-auto" src="/logo.png" alt="Green Token" />
             <span className="ml-3 text-2xl font-display font-bold text-green-primary tracking-tight">Green Token</span>
           </div>
-          {walletAddress ? (
+          {account ? (
             <div className="flex items-center gap-2 px-4 py-2 bg-green-light/30 rounded-xl border border-green-primary/20">
               <span className="text-sm font-medium text-green-primary">
-                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                {account.slice(0, 6)}...{account.slice(-4)}
               </span>
             </div>
           ) : (
             <button
-              onClick={onConnectWallet}
+              onClick={handleConnectWallet}
               className="bg-green-primary text-white px-6 py-2.5 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-lg hover:shadow-green-primary/20 font-semibold text-sm"
             >
               Connect Wallet
@@ -43,21 +81,21 @@ const LandingPage = ({ onConnectWallet, walletAddress }) => {
             <div className="flex flex-col gap-4 pt-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => {}} // Add admin login logic
+                  onClick={handleAdminLogin}
                   className="flex items-center justify-center gap-2 bg-white border-2 border-green-primary text-green-primary px-8 py-4 rounded-xl hover:bg-green-light transition-all duration-200 shadow-xl hover:shadow-green-primary/10 text-lg font-semibold group"
                 >
                   <ShieldCheckIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
                   Login as Admin
                 </button>
                 <button
-                  onClick={() => {}} // Add company login logic
+                  onClick={handleCompanyLogin}
                   className="flex items-center justify-center gap-2 bg-green-primary text-white px-8 py-4 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-xl hover:shadow-green-primary/30 text-lg font-semibold group"
                 >
                   <UserCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
                   Login as Company
                 </button>
               </div>
-              {!walletAddress && (
+              {!account && (
                 <p className="text-sm text-gray-500 text-center">
                   Please connect your wallet first to proceed with login
                 </p>
