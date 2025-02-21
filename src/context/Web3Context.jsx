@@ -65,6 +65,7 @@ export const Web3Provider = ({ children }) => {
 
   const registerCompany = async (companyData) => {
     try {
+      console.log('Registering company with data:', companyData)
       if (!contract || !signer) throw new Error('Please connect wallet first')
       
       const tx = await contract.registerUser(
@@ -78,7 +79,9 @@ export const Web3Provider = ({ children }) => {
         companyData.contactNumber
       )
       
+      console.log('Registration transaction:', tx)
       await tx.wait()
+      console.log('Transaction confirmed')
       return tx
     } catch (error) {
       console.error('Error registering company:', error)
@@ -201,19 +204,34 @@ export const Web3Provider = ({ children }) => {
       const fetchPastEvents = async () => {
         try {
           const events = await contract.queryFilter(filter)
-          const companies = events.map(event => ({
-            companyWallet: event.args[0],
-            companyName: event.args[1],
-            companyType: event.args[2],
-            registrationNumber: event.args[3],
-            country: event.args[4],
-            city: event.args[5],
-            physicalAddress: event.args[6],
-            contactEmail: event.args[7],
-            contactNumber: event.args[8],
-            isVerified: event.args[9],
-            registrationDate: new Date(Number(event.blockTimestamp) * 1000).toISOString(),
-          }))
+          console.log('Raw events:', events)
+          // Process events sequentially
+          const companies = []
+          for (const event of events) {
+            let registrationDate = new Date().toISOString()
+            
+            try {
+              const block = await event.getBlock()
+              registrationDate = new Date(Number(block.timestamp) * 1000).toISOString()
+            } catch (error) {
+              console.log('Error processing timestamp for event:', error)
+            }
+            
+            companies.push({
+              companyWallet: event.args[0],
+              companyName: event.args[1],
+              companyType: event.args[2],
+              registrationNumber: event.args[3],
+              country: event.args[4],
+              city: event.args[5],
+              physicalAddress: event.args[6],
+              contactEmail: event.args[7],
+              contactNumber: event.args[8],
+              isVerified: event.args[9],
+              registrationDate,
+            })
+          }
+          console.log('Processed companies:', companies)
           setPendingCompanies(companies.filter(company => !company.isVerified))
         } catch (error) {
           console.error('Error fetching past events:', error)

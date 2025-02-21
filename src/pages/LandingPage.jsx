@@ -1,12 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ArrowRightIcon, UserCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../context/Web3Context'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import CompanyRegistrationModal from '../components/CompanyRegistrationModal'
 
 const LandingPage = () => {
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
   const navigate = useNavigate()
-  const { connectWallet, account, isAdmin } = useWeb3()
+  const { connectWallet, account, isAdmin, contract, registerCompany } = useWeb3()
 
   const handleConnectWallet = async () => {
     try {
@@ -37,7 +40,53 @@ const LandingPage = () => {
       toast.error('Please connect your wallet first')
       return
     }
-    navigate('/dashboard')
+
+    if (isChecking) return
+    setIsChecking(true)
+
+    try {
+      const companyDetails = await contract.getRegisteredUser(account)
+      console.log('Raw company details:', {
+        companyName: companyDetails.companyName,
+        isVerified: companyDetails.isVerified,
+        full: companyDetails,
+        isEmpty: companyDetails.companyName === '',
+        type: typeof companyDetails.companyName,
+      })
+      
+      // Check if all required fields are empty/default values
+      const isNotRegistered = !companyDetails.companyWallet || 
+        companyDetails.companyWallet === '0x0000000000000000000000000000000000000000' ||
+        !companyDetails.companyName ||
+        companyDetails.companyName === 'test' // Remove this line if 'test' is a valid company name
+      
+      if (isNotRegistered) {
+        console.log('No company found, showing registration modal')
+        setShowRegistrationModal(true)
+      } else if (companyDetails.isVerified) {
+        console.log('Company verified, redirecting to dashboard')
+        navigate('/company-dashboard')
+      } else {
+        console.log('Company pending verification')
+        toast.error('Your company registration is pending verification')
+      }
+    } catch (error) {
+      console.error('Error checking company status:', error)
+      toast.error('Failed to check company status')
+    } finally {
+      setIsChecking(false)
+    }
+  }
+
+  const handleRegistrationSubmit = async (formData) => {
+    try {
+      await registerCompany(formData)
+      setShowRegistrationModal(false)
+      toast.success('Registration submitted successfully! Waiting for verification.')
+    } catch (error) {
+      console.error('Error registering company:', error)
+      toast.error('Failed to register company')
+    }
   }
 
   return (
@@ -89,10 +138,13 @@ const LandingPage = () => {
                 </button>
                 <button
                   onClick={handleCompanyLogin}
-                  className="flex items-center justify-center gap-2 bg-green-primary text-white px-8 py-4 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-xl hover:shadow-green-primary/30 text-lg font-semibold group"
+                  disabled={isChecking}
+                  className={`flex items-center justify-center gap-2 bg-green-primary text-white px-8 py-4 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-xl hover:shadow-green-primary/30 text-lg font-semibold group ${
+                    isChecking ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
                 >
                   <UserCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
-                  Login as Company
+                  {isChecking ? 'Checking Status...' : 'Login as Company'}
                 </button>
               </div>
               {!account && (
@@ -155,6 +207,13 @@ const LandingPage = () => {
           </div>
         </div>
       </div>
+
+      {showRegistrationModal && (
+        <CompanyRegistrationModal
+          onClose={() => setShowRegistrationModal(false)}
+          onSubmit={handleRegistrationSubmit}
+        />
+      )}
     </div>
   )
 }
