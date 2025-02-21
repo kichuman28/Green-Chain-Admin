@@ -1,11 +1,25 @@
+import React, { useState } from 'react'
+import MainLayout from './components/Layout/MainLayout'
+import Dashboard from './pages/Dashboard'
+import LandingPage from './pages/LandingPage'
+
 function App() {
+  const [isConnected, setIsConnected] = useState(false)
+
+  const handleConnectWallet = () => {
+    // Wallet connection logic will go here
+    setIsConnected(true)
+  }
+
+  if (!isConnected) {
+    return <LandingPage onConnectWallet={handleConnectWallet} />
+  }
+
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold text-blue-500">
-        Tailwind CSS is working!
-      </h1>
-    </div>
-  );
+    <MainLayout>
+      <Dashboard />
+    </MainLayout>
+  )
 }
 
-export default App;
+export default App
