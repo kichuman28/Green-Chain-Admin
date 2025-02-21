@@ -45,34 +45,33 @@ const LandingPage = () => {
     setIsChecking(true)
 
     try {
-      const companyDetails = await contract.getRegisteredUser(account)
-      console.log('Raw company details:', {
-        companyName: companyDetails.companyName,
-        isVerified: companyDetails.isVerified,
-        full: companyDetails,
-        isEmpty: companyDetails.companyName === '',
-        type: typeof companyDetails.companyName,
-      })
-      
-      // Check if all required fields are empty/default values
-      const isNotRegistered = !companyDetails.companyWallet || 
-        companyDetails.companyWallet === '0x0000000000000000000000000000000000000000' ||
-        !companyDetails.companyName ||
-        companyDetails.companyName === 'test' // Remove this line if 'test' is a valid company name
-      
-      if (isNotRegistered) {
-        console.log('No company found, showing registration modal')
-        setShowRegistrationModal(true)
-      } else if (companyDetails.isVerified) {
-        console.log('Company verified, redirecting to dashboard')
-        navigate('/company-dashboard')
-      } else {
-        console.log('Company pending verification')
-        toast.error('Your company registration is pending verification')
+      // First check if the wallet is the admin
+      if (isAdmin) {
+        toast.error('Admin wallet cannot be registered as a company')
+        return
       }
-    } catch (error) {
-      console.error('Error checking company status:', error)
-      toast.error('Failed to check company status')
+
+      // Try to get company details, if it fails, it means company doesn't exist
+      try {
+        const companyDetails = await contract.getRegisteredUser(account)
+        
+        if (companyDetails.isVerified) {
+          console.log('Company verified, redirecting to dashboard')
+          navigate('/company-dashboard')
+        } else {
+          console.log('Company pending verification')
+          toast.error('Your company registration is pending verification')
+        }
+      } catch (error) {
+        // If the error contains "Company not registered", show registration modal
+        if (error.message.includes('Company not registered')) {
+          console.log('No company found, showing registration modal')
+          setShowRegistrationModal(true)
+        } else {
+          console.error('Error checking company status:', error)
+          toast.error('Failed to check company status')
+        }
+      }
     } finally {
       setIsChecking(false)
     }
