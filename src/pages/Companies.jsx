@@ -9,16 +9,19 @@ import {
   FunnelIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../context/Web3Context'
+import CompanyDetailsModal from '../components/CompanyDetailsModal'
 import { toast } from 'react-hot-toast'
 
 const Companies = () => {
   const { pendingCompanies, verifyCompany } = useWeb3()
   const [activeTab, setActiveTab] = useState('All Companies')
+  const [selectedCompany, setSelectedCompany] = useState(null)
 
   const handleVerifyCompany = async (companyWallet) => {
     try {
       await verifyCompany(companyWallet)
       toast.success('Company verified successfully')
+      setSelectedCompany(null)
     } catch (error) {
       console.error('Error verifying company:', error)
       toast.error('Failed to verify company')
@@ -107,7 +110,8 @@ const Companies = () => {
                 pendingCompanies.map((company, index) => (
                   <div
                     key={company.companyWallet}
-                    className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-green-light transition-all duration-200"
+                    onClick={() => setSelectedCompany(company)}
+                    className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-green-light transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="p-3 bg-green-light rounded-lg">
@@ -166,6 +170,14 @@ const Companies = () => {
           </div>
         </div>
       </div>
+
+      {/* Company Details Modal */}
+      {selectedCompany && (
+        <CompanyDetailsModal
+          company={selectedCompany}
+          onClose={() => setSelectedCompany(null)}
+        />
+      )}
     </div>
   )
 }
