@@ -1,5 +1,5 @@
 export const CONTRACT_ADDRESS = '0x888775465d75D33ebc0c91226b1a5d5031180eD0'
-export const INFURA_RPC = `https://sepolia.infura.io/v3/75e1ccf8e39e4f67b34e691671471204`
+export const INFURA_RPC = `https://sepolia.infura.io/v3/8daf643dc55444bc8a73d8b854318094`
 export const CONTRACT_ABI = [
 	{
 		"inputs": [

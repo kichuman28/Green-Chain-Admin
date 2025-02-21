@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESS, CONTRACT_ABI, INFURA_RPC } from '../config/web3Config'
 
@@ -10,24 +10,167 @@ export const Web3Provider = ({ children }) => {
   const [contract, setContract] = useState(null)
   const [account, setAccount] = useState(() => localStorage.getItem('account'))
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('isAdmin') === 'true')
-  const [pendingCompanies, setPendingCompanies] = useState([])
+  const [pendingCompanies, setPendingCompanies] = useState(() => {
+    const stored = localStorage.getItem('pendingCompanies')
+    return stored ? JSON.parse(stored) : []
+  })
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [eventListenersSet, setEventListenersSet] = useState(false)
 
+  // Memoize the handleNewRegistration function
+  const handleNewRegistration = useCallback((companyWallet, companyName, companyType, registrationNumber, country, city, physicalAddress, contactEmail, contactNumber, isVerified) => {
+    const newCompany = {
+      companyWallet,
+      companyName,
+      companyType,
+      registrationNumber,
+      country,
+      city,
+      physicalAddress,
+      contactEmail,
+      contactNumber,
+      isVerified,
+      registrationDate: new Date().toISOString(),
+    }
+
+    if (!isVerified) {
+      setPendingCompanies(prev => [newCompany, ...prev])
+    }
+  }, [])
+
+  // Initialize Web3 only once
   useEffect(() => {
+    let isSubscribed = true
+
     const initializeWeb3 = async () => {
-      // Initialize read-only provider
-      const infuraProvider = new ethers.JsonRpcProvider(INFURA_RPC)
-      const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, infuraProvider)
-      setProvider(infuraProvider)
-      setContract(readOnlyContract)
-      
-      // Reconnect if account exists
-      if (localStorage.getItem('account')) {
-        connectWallet()
+      try {
+        const infuraProvider = new ethers.JsonRpcProvider(INFURA_RPC)
+        const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, infuraProvider)
+        
+        if (isSubscribed) {
+          setProvider(infuraProvider)
+          setContract(readOnlyContract)
+        }
+
+        if (localStorage.getItem('account') && isSubscribed) {
+          await connectWallet()
+        }
+      } catch (error) {
+        console.error('Error initializing Web3:', error)
       }
     }
 
     initializeWeb3()
+
+    return () => {
+      isSubscribed = false
+    }
+  }, []) // Empty dependency array as this should only run once
+
+  // Set up event listeners
+  useEffect(() => {
+    if (!contract) return
+
+    let isSubscribed = true
+    const filter = contract.filters.UserRegistered()
+    const verifiedFilter = contract.filters.CompanyVerified()
+
+    const handleUserRegistered = (...args) => {
+      if (isSubscribed) {
+        handleNewRegistration(...args)
+      }
+    }
+
+    const handleCompanyVerified = (companyAddress) => {
+      if (isSubscribed) {
+        setPendingCompanies(prev => 
+          prev.filter(company => 
+            company.companyWallet.toLowerCase() !== companyAddress.toLowerCase()
+          )
+        )
+      }
+    }
+
+    // Add event listeners
+    contract.on(filter, handleUserRegistered)
+    contract.on(verifiedFilter, handleCompanyVerified)
+
+    // Fetch past events only once when contract is set
+    const fetchPastEvents = async () => {
+      try {
+        const events = await contract.queryFilter(filter)
+        const verifiedEvents = await contract.queryFilter(verifiedFilter)
+        const verifiedAddresses = new Set(
+          verifiedEvents.map(event => event.args[0].toLowerCase())
+        )
+
+        if (!isSubscribed) return
+
+        const newPendingCompanies = []
+        for (const event of events) {
+          if (!isSubscribed) break
+
+          const companyWallet = event.args[0].toLowerCase()
+          if (!verifiedAddresses.has(companyWallet)) {
+            const block = await event.getBlock()
+            const registrationDate = new Date(Number(block.timestamp) * 1000).toISOString()
+
+            newPendingCompanies.push({
+              companyWallet,
+              companyName: event.args[1],
+              companyType: event.args[2],
+              registrationNumber: event.args[3],
+              country: event.args[4],
+              city: event.args[5],
+              physicalAddress: event.args[6],
+              contactEmail: event.args[7],
+              contactNumber: event.args[8],
+              isVerified: false,
+              registrationDate
+            })
+          }
+        }
+
+        if (isSubscribed) {
+          setPendingCompanies(newPendingCompanies)
+        }
+      } catch (error) {
+        console.error('Error fetching past events:', error)
+      }
+    }
+
+    fetchPastEvents()
+
+    return () => {
+      isSubscribed = false
+      contract.off(filter, handleUserRegistered)
+      contract.off(verifiedFilter, handleCompanyVerified)
+    }
+  }, [contract, handleNewRegistration])
+
+  // Handle account changes
+  useEffect(() => {
+    if (!window.ethereum) return
+
+    const handleAccountsChanged = async (accounts) => {
+      if (accounts.length === 0) {
+        disconnect()
+      } else {
+        await connectWallet()
+      }
+    }
+
+    window.ethereum.on('accountsChanged', handleAccountsChanged)
+
+    return () => {
+      window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+    }
   }, [])
+
+  // Save pendingCompanies to localStorage
+  useEffect(() => {
+    localStorage.setItem('pendingCompanies', JSON.stringify(pendingCompanies))
+  }, [pendingCompanies])
 
   const connectWallet = async () => {
     try {
@@ -91,15 +234,25 @@ export const Web3Provider = ({ children }) => {
 
   const verifyCompany = async (companyAddress) => {
     try {
+      if (isProcessing) return
+      setIsProcessing(true)
       if (!contract || !signer) throw new Error('Please connect wallet first')
       if (!isAdmin) throw new Error('Only admin can verify companies')
       
       const tx = await contract.verifyCompany(companyAddress)
       await tx.wait()
+      
+      // Update pending companies immediately without waiting for event
+      setPendingCompanies(prev => prev.filter(
+        company => company.companyWallet.toLowerCase() !== companyAddress.toLowerCase()
+      ))
+      
       return tx
     } catch (error) {
       console.error('Error verifying company:', error)
       throw error
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -139,116 +292,6 @@ export const Web3Provider = ({ children }) => {
     localStorage.removeItem('account')
     localStorage.removeItem('isAdmin')
   }
-
-  // Add listener for account changes
-  useEffect(() => {
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', async (accounts) => {
-        if (accounts.length === 0) {
-          // User disconnected their wallet
-          disconnect()
-        } else {
-          // User switched accounts, reconnect
-          await connectWallet()
-        }
-      })
-    }
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', connectWallet)
-      }
-    }
-  }, [])
-
-  // Store pending companies in localStorage
-  useEffect(() => {
-    if (pendingCompanies.length > 0) {
-      localStorage.setItem('pendingCompanies', JSON.stringify(pendingCompanies))
-    }
-  }, [pendingCompanies])
-
-  // Initialize pendingCompanies from localStorage
-  useEffect(() => {
-    const storedCompanies = localStorage.getItem('pendingCompanies')
-    if (storedCompanies) {
-      setPendingCompanies(JSON.parse(storedCompanies))
-    }
-  }, [])
-
-  // Function to handle new registration events
-  const handleNewRegistration = (companyWallet, companyName, companyType, registrationNumber, country, city, physicalAddress, contactEmail, contactNumber, isVerified) => {
-    const newCompany = {
-      companyWallet,
-      companyName,
-      companyType,
-      registrationNumber,
-      country,
-      city,
-      physicalAddress,
-      contactEmail,
-      contactNumber,
-      isVerified,
-      registrationDate: new Date().toISOString(),
-    }
-
-    setPendingCompanies(prev => [newCompany, ...prev])
-  }
-
-  // Set up event listener when contract is initialized
-  useEffect(() => {
-    if (contract) {
-      // Listen for UserRegistered events
-      const filter = contract.filters.UserRegistered()
-      
-      // Get past events
-      const fetchPastEvents = async () => {
-        try {
-          const events = await contract.queryFilter(filter)
-          console.log('Raw events:', events)
-          // Process events sequentially
-          const companies = []
-          for (const event of events) {
-            let registrationDate = new Date().toISOString()
-            
-            try {
-              const block = await event.getBlock()
-              registrationDate = new Date(Number(block.timestamp) * 1000).toISOString()
-            } catch (error) {
-              console.log('Error processing timestamp for event:', error)
-            }
-            
-            companies.push({
-              companyWallet: event.args[0],
-              companyName: event.args[1],
-              companyType: event.args[2],
-              registrationNumber: event.args[3],
-              country: event.args[4],
-              city: event.args[5],
-              physicalAddress: event.args[6],
-              contactEmail: event.args[7],
-              contactNumber: event.args[8],
-              isVerified: event.args[9],
-              registrationDate,
-            })
-          }
-          console.log('Processed companies:', companies)
-          setPendingCompanies(companies.filter(company => !company.isVerified))
-        } catch (error) {
-          console.error('Error fetching past events:', error)
-        }
-      }
-
-      fetchPastEvents()
-
-      // Listen for new events
-      contract.on(filter, handleNewRegistration)
-
-      // Cleanup
-      return () => {
-        contract.off(filter, handleNewRegistration)
-      }
-    }
-  }, [contract])
 
   const value = {
     provider,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   BuildingOfficeIcon,
   CheckBadgeIcon,
@@ -7,19 +7,75 @@ import {
   UserGroupIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../context/Web3Context'
 import CompanyDetailsModal from '../components/CompanyDetailsModal'
 import { toast } from 'react-hot-toast'
 
 const Companies = () => {
-  const { pendingCompanies, verifyCompany } = useWeb3()
+  const { pendingCompanies, verifyCompany, contract } = useWeb3()
   const [activeTab, setActiveTab] = useState('All Companies')
   const [selectedCompany, setSelectedCompany] = useState(null)
+  const [verifiedCompanies, setVerifiedCompanies] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Fetch verified companies
+  useEffect(() => {
+    const fetchVerifiedCompanies = async () => {
+      try {
+        setIsLoading(true)
+        const events = await contract.queryFilter(contract.filters.CompanyVerified())
+        // Get all registered companies from UserRegistered events
+        const registrationEvents = await contract.queryFilter(contract.filters.UserRegistered())
+        const verifiedAddresses = new Set(events.map(event => event.args[0].toLowerCase()))
+        
+        // Filter companies that are in the verified addresses set
+        const companies = registrationEvents
+          .filter(event => verifiedAddresses.has(event.args[0].toLowerCase()))
+          .map(event => ({
+            companyWallet: event.args[0],
+            companyName: event.args[1],
+            companyType: event.args[2],
+            registrationNumber: event.args[3],
+            country: event.args[4],
+            city: event.args[5],
+            physicalAddress: event.args[6],
+            contactEmail: event.args[7],
+            contactNumber: event.args[8],
+            isVerified: true,
+            registrationDate: new Date().toISOString(), // You might want to get this from block timestamp
+          }))
+
+        setVerifiedCompanies(companies)
+      } catch (error) {
+        console.error('Error fetching verified companies:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    if (contract) {
+      fetchVerifiedCompanies()
+    }
+  }, [contract])
 
   const handleVerifyCompany = async (companyWallet) => {
     try {
       await verifyCompany(companyWallet)
+      
+      // Get company details from pending companies
+      const company = pendingCompanies.find(c => 
+        c.companyWallet.toLowerCase() === companyWallet.toLowerCase()
+      )
+      
+      if (company) {
+        setVerifiedCompanies(prev => [...prev, {
+          ...company,
+          isVerified: true
+        }])
+      }
+      
       toast.success('Company verified successfully')
       setSelectedCompany(null)
     } catch (error) {
@@ -86,7 +142,7 @@ const Companies = () => {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="border-b border-gray-100">
           <div className="flex">
-            {['All Companies', 'Pending Verification', 'Token Requests'].map((tab) => (
+            {['All Companies', 'Pending Verification', 'Verified Companies', 'Token Requests'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -158,6 +214,61 @@ const Companies = () => {
                   No pending verifications at the moment
                 </div>
               )
+            ) : activeTab === 'Verified Companies' ? (
+              isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Loading verified companies...</p>
+                </div>
+              ) : verifiedCompanies.length > 0 ? (
+                verifiedCompanies.map((company) => (
+                  <div
+                    key={company.companyWallet}
+                    onClick={() => setSelectedCompany(company)}
+                    className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-green-light transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-green-light rounded-lg">
+                        <BuildingOfficeIcon className="w-6 h-6 text-green-primary" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <h4 className="font-medium">{company.companyName}</h4>
+                          <span className="px-2 py-1 bg-green-100 text-green-600 text-xs rounded-full">
+                            Verified
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">{company.companyType}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Registered on {formatDate(company.registrationDate)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{company.country}</p>
+                        <p className="text-xs text-gray-500">{company.city}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          className="p-2 text-green-primary hover:bg-green-light rounded-lg transition-all duration-200"
+                          title="View Details"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedCompany(company)
+                          }}
+                        >
+                          <EyeIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No verified companies yet
+                </div>
+              )
             ) : activeTab === 'All Companies' ? (
               <div className="text-center py-8 text-gray-500">
                 All companies will be shown here
@@ -176,6 +287,7 @@ const Companies = () => {
         <CompanyDetailsModal
           company={selectedCompany}
           onClose={() => setSelectedCompany(null)}
+          onVerify={handleVerifyCompany}
         />
       )}
     </div>

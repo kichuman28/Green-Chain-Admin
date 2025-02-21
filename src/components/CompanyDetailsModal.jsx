@@ -1,7 +1,7 @@
 import React from 'react'
 import { XMarkIcon, BuildingOfficeIcon, MapPinIcon, PhoneIcon, EnvelopeIcon, IdentificationIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 
-const CompanyDetailsModal = ({ company, onClose }) => {
+const CompanyDetailsModal = ({ company, onClose, onVerify }) => {
   const InfoRow = ({ icon: Icon, label, value }) => (
     <div className="flex items-start space-x-3 p-4 hover:bg-gray-50 rounded-lg transition-colors">
       <div className="p-2 bg-green-light rounded-lg">
@@ -34,13 +34,23 @@ const CompanyDetailsModal = ({ company, onClose }) => {
         </div>
 
         {/* Company Status Banner */}
-        <div className="px-6 py-4 bg-yellow-50 border-b border-yellow-100">
+        <div className={`px-6 py-4 ${
+          company.isVerified 
+            ? 'bg-green-50 border-b border-green-100'
+            : 'bg-yellow-50 border-b border-yellow-100'
+          }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
-                Pending Verification
+              <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                company.isVerified
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                {company.isVerified ? 'Verified' : 'Pending Verification'}
               </span>
-              <span className="text-sm text-yellow-700">
+              <span className={`text-sm ${
+                company.isVerified ? 'text-green-700' : 'text-yellow-700'
+                }`}>
                 Registered on {new Date(company.registrationDate).toLocaleDateString()}
               </span>
             </div>
@@ -98,15 +108,14 @@ const CompanyDetailsModal = ({ company, onClose }) => {
             >
               Close
             </button>
-            <button
-              onClick={() => {
-                // Handle verify action
-                onClose()
-              }}
-              className="px-6 py-2 bg-green-primary text-white rounded-xl hover:bg-green-secondary font-medium transition-all duration-200"
-            >
-              Verify Company
-            </button>
+            {!company.isVerified && (
+              <button
+                onClick={() => onVerify(company.companyWallet)}
+                className="px-6 py-2 bg-green-primary text-white rounded-xl hover:bg-green-secondary font-medium transition-all duration-200"
+              >
+                Verify Company
+              </button>
+            )}
           </div>
         </div>
       </div>
