@@ -1,27 +1,35 @@
 import React from 'react'
-import { ArrowRightIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, UserCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 
-const LandingPage = ({ onConnectWallet }) => {
+const LandingPage = ({ onConnectWallet, walletAddress }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-light/30 to-white font-body">
+    <div className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-b from-green-light/30 to-white font-body">
       {/* Navigation */}
-      <nav className="container mx-auto px-6 py-6">
+      <nav className="container mx-auto px-6 py-6 max-w-[1440px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <img className="h-12 w-auto" src="/logo.png" alt="Green Token" />
             <span className="ml-3 text-2xl font-display font-bold text-green-primary tracking-tight">Green Token</span>
           </div>
-          <button
-            onClick={onConnectWallet}
-            className="bg-green-primary text-white px-8 py-3 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-lg hover:shadow-green-primary/20 font-semibold"
-          >
-            Connect Wallet
-          </button>
+          {walletAddress ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-light/30 rounded-xl border border-green-primary/20">
+              <span className="text-sm font-medium text-green-primary">
+                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={onConnectWallet}
+              className="bg-green-primary text-white px-6 py-2.5 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-lg hover:shadow-green-primary/20 font-semibold text-sm"
+            >
+              Connect Wallet
+            </button>
+          )}
         </div>
       </nav>
 
       {/* Hero Section */}
-      <div className="container mx-auto px-6 pt-24 pb-32">
+      <div className="container mx-auto px-6 pt-24 pb-32 max-w-[1440px]">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-10">
             <h1 className="font-display text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
@@ -32,17 +40,28 @@ const LandingPage = ({ onConnectWallet }) => {
             <p className="text-xl text-gray-600 leading-relaxed">
               Join the revolution of sustainable business practices with Green Token. Track, trade, and verify your environmental impact on the blockchain.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button
-                onClick={onConnectWallet}
-                className="flex items-center justify-center gap-2 bg-green-primary text-white px-10 py-4 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-xl hover:shadow-green-primary/30 text-lg font-semibold"
-              >
-                Get Started
-                <ArrowRightIcon className="w-5 h-5" />
-              </button>
-              <button className="px-10 py-4 rounded-xl border-2 border-green-primary text-green-primary hover:bg-green-light transition-all duration-200 text-lg font-semibold hover:shadow-lg">
-                Learn More
-              </button>
+            <div className="flex flex-col gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => {}} // Add admin login logic
+                  className="flex items-center justify-center gap-2 bg-white border-2 border-green-primary text-green-primary px-8 py-4 rounded-xl hover:bg-green-light transition-all duration-200 shadow-xl hover:shadow-green-primary/10 text-lg font-semibold group"
+                >
+                  <ShieldCheckIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
+                  Login as Admin
+                </button>
+                <button
+                  onClick={() => {}} // Add company login logic
+                  className="flex items-center justify-center gap-2 bg-green-primary text-white px-8 py-4 rounded-xl hover:bg-green-secondary transition-all transform hover:scale-105 duration-200 shadow-xl hover:shadow-green-primary/30 text-lg font-semibold group"
+                >
+                  <UserCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
+                  Login as Company
+                </button>
+              </div>
+              {!walletAddress && (
+                <p className="text-sm text-gray-500 text-center">
+                  Please connect your wallet first to proceed with login
+                </p>
+              )}
             </div>
           </div>
           
@@ -69,8 +88,8 @@ const LandingPage = ({ onConnectWallet }) => {
       </div>
 
       {/* Features Section */}
-      <div className="bg-white py-32">
-        <div className="container mx-auto px-6">
+      <div className="bg-white py-32 w-full">
+        <div className="container mx-auto px-6 max-w-[1440px]">
           <h2 className="text-4xl font-display font-bold text-center mb-20">Why Choose Green Token?</h2>
           <div className="grid md:grid-cols-3 gap-12">
             {[
