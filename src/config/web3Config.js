@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0x4708709bace67f40462c773e0ef7524f20b6c600'
+export const CONTRACT_ADDRESS = '0xa75480a395fd5817b33f5a23fbd64e250a48ac85'
 export const INFURA_RPC = `https://sepolia.infura.io/v3/75e1ccf8e39e4f67b34e691671471204`
 export const CONTRACT_ABI = [
     {

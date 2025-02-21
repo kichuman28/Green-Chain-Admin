@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useWeb3 } from '../context/Web3Context'
+import { formatTokenAmount } from '../utils/formatters'
 import { 
   ArrowTrendingUpIcon, 
   ArrowTrendingDownIcon,
@@ -27,12 +28,16 @@ const recentTransactions = [
   { type: 'Verified', amount: 'Carbon Offset', timestamp: '2 days ago', increase: true },
 ]
 
-const StatCard = ({ title, value, change, icon: Icon, color }) => (
+const StatCard = ({ title, value, change, icon: Icon, color, isLoading }) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-gray-500 text-sm font-medium">{title}</p>
-        <h3 className="text-2xl font-display font-bold mt-2">{value}</h3>
+        {isLoading ? (
+          <div className="h-8 w-32 bg-gray-100 animate-pulse rounded mt-2"></div>
+        ) : (
+          <h3 className="text-2xl font-display font-bold mt-2">{value}</h3>
+        )}
         <p className={`text-sm mt-2 ${change >= 0 ? 'text-green-primary' : 'text-red-500'} flex items-center`}>
           {change >= 0 ? (
             <ArrowTrendingUpIcon className="w-4 h-4 mr-1" />
@@ -50,7 +55,26 @@ const StatCard = ({ title, value, change, icon: Icon, color }) => (
 )
 
 const Dashboard = () => {
-  const { account } = useWeb3()
+  const { contract } = useWeb3()
+  const [totalSupply, setTotalSupply] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTotalSupply = async () => {
+      try {
+        if (contract) {
+          const supply = await contract.totalSupply()
+          setTotalSupply(supply)
+        }
+      } catch (error) {
+        console.error('Error fetching total supply:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTotalSupply()
+  }, [contract])
 
   return (
     <div className="space-y-8">
@@ -58,10 +82,11 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Green Tokens"
-          value="5,234 GT"
+          value={totalSupply ? formatTokenAmount(totalSupply) : '---'}
           change={12.5}
           icon={CircleStackIcon}
           color="bg-green-primary"
+          isLoading={isLoading}
         />
         <StatCard
           title="Carbon Offset"
