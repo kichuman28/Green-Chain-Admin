@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   HomeIcon,
   ShoppingBagIcon,
@@ -7,6 +7,7 @@ import {
   ClockIcon,
   UserCircleIcon,
   ArrowLeftOnRectangleIcon,
+  BuildingOfficeIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../../context/Web3Context'
 
@@ -26,10 +27,17 @@ const MenuItem = ({ icon: Icon, label, to, active }) => (
 
 const Sidebar = () => {
   const location = useLocation()
-  const { account } = useWeb3()
+  const navigate = useNavigate()
+  const { account, disconnect } = useWeb3()
+
+  const handleDisconnect = () => {
+    disconnect()
+    navigate('/')
+  }
 
   const menuItems = [
     { icon: HomeIcon, label: 'Dashboard', path: '/dashboard' },
+    { icon: BuildingOfficeIcon, label: 'Companies', path: '/companies' },
     { icon: ShoppingBagIcon, label: 'Marketplace', path: '/marketplace' },
     { icon: ChartBarIcon, label: 'Sustainability', path: '/sustainability' },
     { icon: ClockIcon, label: 'History', path: '/history' },
@@ -75,7 +83,10 @@ const Sidebar = () => {
           </div>
         )}
 
-        <button className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
+        <button 
+          onClick={handleDisconnect}
+          className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+        >
           <ArrowLeftOnRectangleIcon className="w-4 h-4" />
           <span className="text-sm font-medium">Disconnect</span>
         </button>

@@ -116,6 +116,14 @@ export const Web3Provider = ({ children }) => {
     }
   }
 
+  const disconnect = () => {
+    setProvider(null)
+    setSigner(null)
+    setContract(null)
+    setAccount(null)
+    setIsAdmin(false)
+  }
+
   const value = {
     provider,
     signer,
@@ -127,6 +135,7 @@ export const Web3Provider = ({ children }) => {
     verifyCompany,
     mintTokens,
     getCompanyDetails,
+    disconnect,
   }
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>

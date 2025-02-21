@@ -6,7 +6,7 @@ import {
   ArrowTrendingDownIcon,
   CircleStackIcon,
   DocumentCheckIcon,
-  ClockIcon
+  ClockIcon,
 } from '@heroicons/react/24/outline'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
