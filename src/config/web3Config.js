@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0xb3E600D31Ad53FaDc53aA3dd2B98A589d2073dF1'
+export const CONTRACT_ADDRESS = '0xbF1d48B7c5224f067325ef8F35F5aaF547fF59Ee'
 export const INFURA_RPC = `https://sepolia.infura.io/v3/8daf643dc55444bc8a73d8b854318094`
 export const CONTRACT_ABI = [
 	{
@@ -183,39 +183,6 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "evidence",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			}
-		],
-		"name": "mint",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -285,6 +252,39 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [],
 		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidence",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
+			}
+		],
+		"name": "reports",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"

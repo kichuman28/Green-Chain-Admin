@@ -1,14 +1,58 @@
 import React, { useState } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline'
+import axios from 'axios'
+
+const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY
+const PINATA_API_SECRET = import.meta.env.VITE_PINATA_API_SECRET
 
 const MintTokenModal = ({ company, onClose, onMint }) => {
   const [formData, setFormData] = useState({
     amount: '',
+    name: '',
+    description: '',
+    evidence: null,
   })
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadedUrl, setUploadedUrl] = useState('')
+
+  const handleFileUpload = async (file) => {
+    try {
+      setIsUploading(true)
+      
+      // Create form data for Pinata
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Upload to Pinata
+      const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          pinata_api_key: PINATA_API_KEY,
+          pinata_secret_api_key: PINATA_API_SECRET,
+        },
+      })
+
+      const ipfsUrl = `ipfs://${response.data.IpfsHash}`
+      setUploadedUrl(ipfsUrl)
+      setFormData(prev => ({
+        ...prev,
+        evidence: ipfsUrl
+      }))
+    } catch (error) {
+      console.error('Error uploading to IPFS:', error)
+      alert('Failed to upload file to IPFS. Please try again.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      if (!formData.evidence) {
+        alert('Please upload evidence document first')
+        return
+      }
       await onMint(company.companyWallet, formData)
       onClose()
     } catch (error) {
@@ -17,10 +61,16 @@ const MintTokenModal = ({ company, onClose, onMint }) => {
   }
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
+    const { name, value, files } = e.target
+    
+    if (name === 'evidenceFile' && files?.length > 0) {
+      handleFileUpload(files[0])
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   return (
@@ -50,10 +100,66 @@ const MintTokenModal = ({ company, onClose, onMint }) => {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Transaction Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-green-primary focus:border-green-primary"
+              required
+              placeholder="Enter a name for this transaction"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-green-primary focus:border-green-primary"
+              required
+              rows="3"
+              placeholder="Enter transaction description"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Evidence Document
+            </label>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+              <div className="space-y-1 text-center">
+                <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="flex text-sm text-gray-600">
+                  <label className="relative cursor-pointer bg-white rounded-md font-medium text-green-primary hover:text-green-secondary">
+                    <span>Upload a file</span>
+                    <input
+                      type="file"
+                      name="evidenceFile"
+                      className="sr-only"
+                      onChange={handleChange}
+                      accept=".pdf,.doc,.docx,.txt"
+                    />
+                  </label>
+                </div>
+                {isUploading && <p className="text-xs text-gray-500">Uploading...</p>}
+                {uploadedUrl && <p className="text-xs text-green-500">File uploaded successfully!</p>}
+              </div>
+            </div>
+          </div>
+
           <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">
             <p>• Tokens will be transferred from your account to {company.companyName}</p>
+            <p>• Evidence document will be stored on IPFS</p>
+            <p>• This transaction will be recorded permanently</p>
             <p>• Make sure you have sufficient balance</p>
-            <p>• This action cannot be undone</p>
           </div>
 
           <div className="flex justify-end gap-4 mt-6">
@@ -66,7 +172,12 @@ const MintTokenModal = ({ company, onClose, onMint }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-primary text-white rounded-lg hover:bg-green-secondary"
+              disabled={isUploading || !uploadedUrl}
+              className={`px-4 py-2 bg-green-primary text-white rounded-lg ${
+                isUploading || !uploadedUrl 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-green-secondary'
+              }`}
             >
               Transfer Tokens
             </button>

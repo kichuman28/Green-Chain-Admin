@@ -126,15 +126,29 @@ const Companies = () => {
 
       console.log('Transferring tokens:', {
         to: companyAddress,
-        amount: amount
+        amount: amount,
+        name: formData.name,
+        evidence: formData.evidence,
+        description: formData.description
       })
 
-      // Call the transfer function
-      const tx = await contract.transfer(companyAddress, amount)
+      // First do the token transfer
+      const transferTx = await contract.transfer(companyAddress, amount)
+      console.log('Transfer transaction sent:', transferTx.hash)
+      await transferTx.wait()
+      console.log('Transfer transaction confirmed')
 
-      console.log('Transaction sent:', tx.hash)
-      await tx.wait()
-      console.log('Transaction confirmed')
+      // Then call the reports function
+      const reportsTx = await contract.reports(
+        companyAddress,
+        amount,
+        formData.name,
+        formData.evidence,
+        formData.description
+      )
+      console.log('Reports transaction sent:', reportsTx.hash)
+      await reportsTx.wait()
+      console.log('Reports transaction confirmed')
 
       // Verify the new balances
       const newAdminBalance = await contract.balanceOf(account)
@@ -150,8 +164,8 @@ const Companies = () => {
       toast.success(`Successfully transferred ${amount} tokens to ${mintModalCompany.companyName}`)
       setMintModalCompany(null)
     } catch (error) {
-      console.error('Error transferring tokens:', error)
-      toast.error('Failed to transfer tokens')
+      console.error('Error in token transfer process:', error)
+      toast.error('Failed to complete the transfer process')
     }
   }
 
