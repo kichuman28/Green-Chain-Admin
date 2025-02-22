@@ -5,6 +5,7 @@ import Companies from '../pages/Companies'
 import TransactionHistory from '../pages/TransactionHistory'
 import CompanyDashboard from '../pages/CompanyDashboard'
 import LandingPage from '../pages/LandingPage'
+import Reports from '../pages/Reports'
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,14 @@ export const router = createBrowserRouter([
     element: (
       <MainLayout>
         <Companies />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/reports',
+    element: (
+      <MainLayout>
+        <Reports />
       </MainLayout>
     ),
   },

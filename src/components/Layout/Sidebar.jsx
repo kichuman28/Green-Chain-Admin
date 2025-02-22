@@ -9,6 +9,7 @@ import {
   ArrowLeftOnRectangleIcon,
   BuildingOfficeIcon,
   DocumentTextIcon,
+  DocumentCheckIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../../context/Web3Context'
 import appLogo from '../../assets/app_icon.png'
@@ -40,6 +41,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: HomeIcon, label: 'Dashboard', path: '/dashboard' },
     { icon: BuildingOfficeIcon, label: 'Companies', path: '/companies' },
+    { icon: DocumentCheckIcon, label: 'Reports', path: '/reports' },
     { icon: ShoppingBagIcon, label: 'Marketplace', path: '/marketplace' },
     { icon: ChartBarIcon, label: 'Sustainability', path: '/sustainability' },
     { icon: DocumentTextIcon, label: 'Transaction History', path: '/transactions' },
