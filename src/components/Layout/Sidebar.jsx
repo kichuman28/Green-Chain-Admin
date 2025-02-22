@@ -8,6 +8,7 @@ import {
   UserCircleIcon,
   ArrowLeftOnRectangleIcon,
   BuildingOfficeIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../../context/Web3Context'
 
@@ -40,6 +41,7 @@ const Sidebar = () => {
     { icon: BuildingOfficeIcon, label: 'Companies', path: '/companies' },
     { icon: ShoppingBagIcon, label: 'Marketplace', path: '/marketplace' },
     { icon: ChartBarIcon, label: 'Sustainability', path: '/sustainability' },
+    { icon: DocumentTextIcon, label: 'Transaction History', path: '/transactions' },
     { icon: ClockIcon, label: 'History', path: '/history' },
     { icon: UserCircleIcon, label: 'Profile', path: '/profile' },
   ]

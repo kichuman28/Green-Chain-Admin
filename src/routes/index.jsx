@@ -1,8 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom'
+import MainLayout from '../components/Layout/MainLayout'
 import Dashboard from '../pages/Dashboard'
 import Companies from '../pages/Companies'
+import TransactionHistory from '../pages/TransactionHistory'
 import CompanyDashboard from '../pages/CompanyDashboard'
-import MainLayout from '../components/Layout/MainLayout'
 import LandingPage from '../pages/LandingPage'
 
 export const router = createBrowserRouter([
@@ -23,6 +24,14 @@ export const router = createBrowserRouter([
     element: (
       <MainLayout>
         <Companies />
+      </MainLayout>
+    ),
+  },
+  {
+    path: '/transactions',
+    element: (
+      <MainLayout>
+        <TransactionHistory />
       </MainLayout>
     ),
   },
