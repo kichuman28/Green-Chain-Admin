@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0xbF1d48B7c5224f067325ef8F35F5aaF547fF59Ee'
+export const CONTRACT_ADDRESS = '0xfc3788AAe6d1eE1Fd2A2906842c97cc27C91f619'
 export const INFURA_RPC = `https://sepolia.infura.io/v3/8daf643dc55444bc8a73d8b854318094`
 export const CONTRACT_ABI = [
 	{
@@ -169,6 +169,19 @@ export const CONTRACT_ABI = [
 			{
 				"indexed": true,
 				"internalType": "address",
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "CommonUserRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
 				"name": "companyWallet",
 				"type": "address"
 			},
@@ -200,6 +213,13 @@ export const CONTRACT_ABI = [
 		],
 		"name": "OwnershipTransferred",
 		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "registerCommonUser",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"inputs": [
@@ -547,6 +567,30 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "commonUsers",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "isRegistered",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "decimals",
 		"outputs": [
@@ -681,6 +725,25 @@ export const CONTRACT_ABI = [
 				"internalType": "struct GreenToken.UserDetails[]",
 				"name": "",
 				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isCommonUserRegistered",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
