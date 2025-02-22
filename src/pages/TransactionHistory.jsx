@@ -6,13 +6,16 @@ import {
   ArrowTrendingDownIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline'
+import TransactionHistoryModal from '../components/TransactionHistoryModal'
 
 const TransactionHistory = () => {
   const { contract, account } = useWeb3()
   const [transactions, setTransactions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedAddress, setSelectedAddress] = useState(null)
 
   useEffect(() => {
     const fetchTransactionHistory = async () => {
@@ -154,10 +157,19 @@ const TransactionHistory = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`font-medium ${tx.increase ? 'text-green-primary' : 'text-red-500'}`}>
-                      {tx.increase ? '+' : '-'}{formatTokenAmount(tx.amount)}
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className={`font-medium ${tx.increase ? 'text-green-primary' : 'text-red-500'}`}>
+                        {tx.increase ? '+' : '-'}{formatTokenAmount(tx.amount)}
+                      </div>
                     </div>
+                    <button
+                      onClick={() => setSelectedAddress(tx.increase ? tx.from : tx.to)}
+                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                      title="View Transaction Details"
+                    >
+                      <InformationCircleIcon className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -169,6 +181,14 @@ const TransactionHistory = () => {
           </div>
         )}
       </div>
+
+      {/* Transaction Details Modal */}
+      {selectedAddress && (
+        <TransactionHistoryModal
+          address={selectedAddress}
+          onClose={() => setSelectedAddress(null)}
+        />
+      )}
     </div>
   )
 }
