@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   BuildingOfficeIcon,
   CheckBadgeIcon,
@@ -19,46 +19,57 @@ const Companies = () => {
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [verifiedCompanies, setVerifiedCompanies] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [lastFetchTime, setLastFetchTime] = useState(0)
 
-  // Fetch verified companies
-  useEffect(() => {
-    const fetchVerifiedCompanies = async () => {
-      try {
-        setIsLoading(true)
-        const events = await contract.queryFilter(contract.filters.CompanyVerified())
-        // Get all registered companies from UserRegistered events
-        const registrationEvents = await contract.queryFilter(contract.filters.UserRegistered())
-        const verifiedAddresses = new Set(events.map(event => event.args[0].toLowerCase()))
-        
-        // Filter companies that are in the verified addresses set
-        const companies = registrationEvents
-          .filter(event => verifiedAddresses.has(event.args[0].toLowerCase()))
-          .map(event => ({
-            companyWallet: event.args[0],
-            companyName: event.args[1],
-            companyType: event.args[2],
-            registrationNumber: event.args[3],
-            country: event.args[4],
-            city: event.args[5],
-            physicalAddress: event.args[6],
-            contactEmail: event.args[7],
-            contactNumber: event.args[8],
-            isVerified: true,
-            registrationDate: new Date().toISOString(), // You might want to get this from block timestamp
-          }))
-
-        setVerifiedCompanies(companies)
-      } catch (error) {
-        console.error('Error fetching verified companies:', error)
-      } finally {
-        setIsLoading(false)
-      }
+  // Memoize the fetch function to prevent recreating it on every render
+  const fetchVerifiedCompanies = useCallback(async (force = false) => {
+    // Only fetch if it's been more than 30 seconds since the last fetch
+    // or if force = true
+    const now = Date.now()
+    if (!force && now - lastFetchTime < 30000) {
+      return;
     }
-    
-    if (contract) {
+
+    try {
+      setIsLoading(true)
+      const events = await contract.queryFilter(contract.filters.CompanyVerified())
+      // Get all registered companies from UserRegistered events
+      const registrationEvents = await contract.queryFilter(contract.filters.UserRegistered())
+      const verifiedAddresses = new Set(events.map(event => event.args[0].toLowerCase()))
+      
+      // Filter companies that are in the verified addresses set
+      const companies = registrationEvents
+        .filter(event => verifiedAddresses.has(event.args[0].toLowerCase()))
+        .map(event => ({
+          companyWallet: event.args[0],
+          companyName: event.args[1],
+          companyType: event.args[2],
+          registrationNumber: event.args[3],
+          country: event.args[4],
+          city: event.args[5],
+          physicalAddress: event.args[6],
+          contactEmail: event.args[7],
+          contactNumber: event.args[8],
+          isVerified: true,
+          registrationDate: new Date().toISOString(), // You might want to get this from block timestamp
+        }))
+
+      setVerifiedCompanies(companies)
+      setLastFetchTime(now)
+    } catch (error) {
+      console.error('Error fetching verified companies:', error)
+      toast.error('Failed to fetch verified companies')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [contract, lastFetchTime])
+
+  // Fetch verified companies when contract is available or tab changes to 'Verified Companies'
+  useEffect(() => {
+    if (contract && activeTab === 'Verified Companies') {
       fetchVerifiedCompanies()
     }
-  }, [contract])
+  }, [contract, activeTab, fetchVerifiedCompanies])
 
   const handleVerifyCompany = async (companyWallet) => {
     try {
@@ -78,6 +89,9 @@ const Companies = () => {
       
       toast.success('Company verified successfully')
       setSelectedCompany(null)
+      
+      // Force refresh the verified companies list
+      fetchVerifiedCompanies(true)
     } catch (error) {
       console.error('Error verifying company:', error)
       toast.error('Failed to verify company')

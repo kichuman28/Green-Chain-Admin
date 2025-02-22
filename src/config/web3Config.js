@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0x888775465d75D33ebc0c91226b1a5d5031180eD0'
+export const CONTRACT_ADDRESS = '0xb3E600D31Ad53FaDc53aA3dd2B98A589d2073dF1'
 export const INFURA_RPC = `https://sepolia.infura.io/v3/8daf643dc55444bc8a73d8b854318094`
 export const CONTRACT_ABI = [
 	{
@@ -198,6 +198,16 @@ export const CONTRACT_ABI = [
 				"internalType": "string",
 				"name": "name",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidence",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "description",
+				"type": "string"
 			}
 		],
 		"name": "mint",
@@ -298,6 +308,24 @@ export const CONTRACT_ABI = [
 				"indexed": false,
 				"internalType": "string",
 				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidence",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "description",
 				"type": "string"
 			}
 		],
@@ -633,6 +661,21 @@ export const CONTRACT_ABI = [
 						"internalType": "uint256",
 						"name": "mintedAmount",
 						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "evidence",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
 					}
 				],
 				"internalType": "struct GreenToken.UserDetails[]",
