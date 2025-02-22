@@ -8,15 +8,18 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../context/Web3Context'
 import CompanyDetailsModal from '../components/CompanyDetailsModal'
+import MintTokenModal from '../components/MintTokenModal'
 import { toast } from 'react-hot-toast'
 
 const Companies = () => {
-  const { pendingCompanies, verifyCompany, contract } = useWeb3()
+  const { pendingCompanies, verifyCompany, contract, account } = useWeb3()
   const [activeTab, setActiveTab] = useState('All Companies')
   const [selectedCompany, setSelectedCompany] = useState(null)
+  const [mintModalCompany, setMintModalCompany] = useState(null)
   const [verifiedCompanies, setVerifiedCompanies] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState(0)
@@ -95,6 +98,60 @@ const Companies = () => {
     } catch (error) {
       console.error('Error verifying company:', error)
       toast.error('Failed to verify company')
+    }
+  }
+
+  const handleMintTokens = async (companyAddress, formData) => {
+    try {
+      // Convert amount to proper format and validate
+      const amount = parseInt(formData.amount)
+      
+      if (amount <= 0) {
+        toast.error('Amount must be greater than 0')
+        return
+      }
+
+      // Get current balances
+      const adminBalance = await contract.balanceOf(account)
+      const companyBalance = await contract.balanceOf(companyAddress)
+      
+      console.log('Current admin balance:', adminBalance.toString())
+      console.log('Current company balance:', companyBalance.toString())
+
+      // Check if admin has enough tokens
+      if (amount > adminBalance) {
+        toast.error(`Insufficient balance. You only have ${adminBalance.toString()} tokens available.`)
+        return
+      }
+
+      console.log('Transferring tokens:', {
+        to: companyAddress,
+        amount: amount
+      })
+
+      // Call the transfer function
+      const tx = await contract.transfer(companyAddress, amount)
+
+      console.log('Transaction sent:', tx.hash)
+      await tx.wait()
+      console.log('Transaction confirmed')
+
+      // Verify the new balances
+      const newAdminBalance = await contract.balanceOf(account)
+      const newCompanyBalance = await contract.balanceOf(companyAddress)
+
+      console.log('New admin balance:', newAdminBalance.toString())
+      console.log('New company balance:', newCompanyBalance.toString())
+      
+      // Calculate actual tokens transferred
+      const tokensTransferred = newCompanyBalance - companyBalance
+      console.log('Actual tokens transferred:', tokensTransferred.toString())
+
+      toast.success(`Successfully transferred ${amount} tokens to ${mintModalCompany.companyName}`)
+      setMintModalCompany(null)
+    } catch (error) {
+      console.error('Error transferring tokens:', error)
+      toast.error('Failed to transfer tokens')
     }
   }
 
@@ -274,6 +331,16 @@ const Companies = () => {
                         >
                           <EyeIcon className="w-5 h-5" />
                         </button>
+                        <button 
+                          className="p-2 text-green-primary hover:bg-green-light rounded-lg transition-all duration-200"
+                          title="Mint Tokens"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setMintModalCompany(company)
+                          }}
+                        >
+                          <CurrencyDollarIcon className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -302,6 +369,15 @@ const Companies = () => {
           company={selectedCompany}
           onClose={() => setSelectedCompany(null)}
           onVerify={handleVerifyCompany}
+        />
+      )}
+
+      {/* Mint Token Modal */}
+      {mintModalCompany && (
+        <MintTokenModal
+          company={mintModalCompany}
+          onClose={() => setMintModalCompany(null)}
+          onMint={handleMintTokens}
         />
       )}
     </div>

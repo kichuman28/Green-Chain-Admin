@@ -55,43 +55,46 @@ const StatCard = ({ title, value, change, icon: Icon, color, isLoading }) => (
 )
 
 const Dashboard = () => {
-  const { contract } = useWeb3()
+  const { contract, account } = useWeb3()
+  const [adminBalance, setAdminBalance] = useState(null)
   const [totalSupply, setTotalSupply] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchTotalSupply = async () => {
+    const fetchBalances = async () => {
       try {
-        if (contract) {
+        if (contract && account) {
+          const balance = await contract.balanceOf(account)
           const supply = await contract.totalSupply()
+          setAdminBalance(balance)
           setTotalSupply(supply)
         }
       } catch (error) {
-        console.error('Error fetching total supply:', error)
+        console.error('Error fetching balances:', error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchTotalSupply()
-  }, [contract])
+    fetchBalances()
+  }, [contract, account])
 
   return (
     <div className="space-y-8">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Total Green Tokens"
-          value={totalSupply ? formatTokenAmount(totalSupply) : '---'}
+          title="Available Green Tokens"
+          value={adminBalance ? formatTokenAmount(adminBalance) : '---'}
           change={12.5}
           icon={CircleStackIcon}
           color="bg-green-primary"
           isLoading={isLoading}
         />
         <StatCard
-          title="Carbon Offset"
-          value="45.3 tons"
-          change={8.2}
+          title="Total Supply"
+          value={totalSupply ? formatTokenAmount(totalSupply) : '---'}
+          change={0}
           icon={ArrowTrendingUpIcon}
           color="bg-green-secondary"
         />
@@ -115,7 +118,12 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-display font-semibold">Token Activity</h2>
+            <div>
+              <h2 className="text-xl font-display font-semibold">Token Activity</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Available Balance: {adminBalance ? formatTokenAmount(adminBalance) : '---'}
+              </p>
+            </div>
             <select className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
               <option>Last 7 days</option>
               <option>Last 30 days</option>
@@ -148,7 +156,12 @@ const Dashboard = () => {
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h2 className="text-xl font-display font-semibold mb-6">Recent Activity</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-display font-semibold">Recent Activity</h2>
+            <div className="text-sm text-gray-500">
+              Balance: {adminBalance ? formatTokenAmount(adminBalance) : '---'}
+            </div>
+          </div>
           <div className="space-y-4">
             {recentTransactions.map((transaction, index) => (
               <div key={index} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors duration-150">
