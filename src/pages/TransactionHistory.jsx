@@ -98,45 +98,47 @@ const TransactionHistory = () => {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-gray-800">Transaction History</h1>
+        <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-green-primary to-green-secondary bg-clip-text text-transparent">Transaction History</h1>
         <p className="text-gray-500 mt-1">View all your token transfer transactions</p>
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white rounded-xl p-4 flex items-center gap-4">
-        <div className="flex-1 relative">
-          <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by address or transaction hash..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-green-primary focus:ring-1 focus:ring-green-primary outline-none"
-          />
+      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by address or transaction hash..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:border-green-primary focus:ring-2 focus:ring-green-primary/20 outline-none transition-all duration-200"
+            />
+          </div>
+          <button className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-lg hover:border-green-primary hover:bg-green-50 transition-all duration-200">
+            <FunnelIcon className="w-5 h-5 text-gray-600" />
+            <span className="text-sm font-medium text-gray-600">Filter</span>
+          </button>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-          <FunnelIcon className="w-5 h-5 text-gray-600" />
-          <span className="text-sm font-medium text-gray-600">Filter</span>
-        </button>
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
-            <p className="text-gray-500 mt-2">Loading transactions...</p>
+          <div className="p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-primary mx-auto"></div>
+            <p className="text-gray-500 font-medium mt-4">Loading transactions...</p>
           </div>
         ) : filteredTransactions.length > 0 ? (
           <div className="divide-y divide-gray-100">
             {filteredTransactions.map((tx, index) => (
-              <div key={tx.hash} className="p-4 hover:bg-gray-50 transition-colors duration-150">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-lg ${tx.increase ? 'bg-green-light' : 'bg-red-100'}`}>
+              <div key={tx.hash} className="p-4 sm:p-6 hover:bg-gray-50 transition-all duration-200 group">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-3 rounded-xl ${tx.increase ? 'bg-green-light' : 'bg-red-100'} group-hover:scale-110 transition-transform duration-200`}>
                       {tx.increase ? (
                         <ArrowTrendingUpIcon className="w-5 h-5 text-green-primary" />
                       ) : (
@@ -144,28 +146,34 @@ const TransactionHistory = () => {
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{tx.type}</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-gray-900">{tx.type}</span>
                         <span className="text-sm text-gray-500">•</span>
                         <span className="text-sm text-gray-500">{formatDate(tx.timestamp)}</span>
                       </div>
                       <div className="text-sm text-gray-500 mt-1">
-                        From: {formatAddress(tx.from)} → To: {formatAddress(tx.to)}
+                        <span className="inline-flex items-center space-x-1">
+                          <span>From:</span>
+                          <span className="font-medium group-hover:text-green-primary transition-colors duration-200">{formatAddress(tx.from)}</span>
+                          <span>→</span>
+                          <span>To:</span>
+                          <span className="font-medium group-hover:text-green-primary transition-colors duration-200">{formatAddress(tx.to)}</span>
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="text-xs text-gray-400 mt-1 font-mono">
                         Tx: {formatAddress(tx.hash)}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 ml-11 sm:ml-0">
                     <div className="text-right">
-                      <div className={`font-medium ${tx.increase ? 'text-green-primary' : 'text-red-500'}`}>
+                      <div className={`font-medium ${tx.increase ? 'text-green-primary' : 'text-red-500'} text-lg`}>
                         {tx.increase ? '+' : '-'}{formatTokenAmount(tx.amount)}
                       </div>
                     </div>
                     <button
                       onClick={() => setSelectedAddress(tx.increase ? tx.from : tx.to)}
-                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                      className="p-2 text-gray-500 hover:text-green-primary hover:bg-green-light rounded-lg transition-all duration-200 group-hover:scale-110"
                       title="View Transaction Details"
                     >
                       <InformationCircleIcon className="w-5 h-5" />
@@ -176,8 +184,16 @@ const TransactionHistory = () => {
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center text-gray-500">
-            {searchTerm ? 'No transactions found matching your search' : 'No transactions found'}
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-50 rounded-full flex items-center justify-center">
+              <InformationCircleIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 font-medium">
+              {searchTerm ? 'No transactions found matching your search' : 'No transactions found'}
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              {searchTerm ? 'Try adjusting your search terms' : 'Transactions will appear here once they are made'}
+            </p>
           </div>
         )}
       </div>
