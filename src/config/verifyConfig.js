@@ -1,6 +1,6 @@
 export const VERIFY_CONFIG = {
   rpcUrl: 'https://sepolia.infura.io/v3/8daf643dc55444bc8a73d8b854318094',
-  contractAddress: '0x97F4dcd69eB75C80ED0256Eaa2Ce3e28fb414f5f',
+  contractAddress: '0xddED014B151F3BAfc628685F7Af02D0948Fb7317',
   contractAbi: [
 	{
 		"inputs": [],
