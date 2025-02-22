@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { verificationService } from '../services/VerificationService';
+import { verificationService } from '../services/verificationService';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
