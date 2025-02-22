@@ -11,6 +11,7 @@ import {
   DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 import { useWeb3 } from '../../context/Web3Context'
+import appLogo from '../../assets/app_icon.png'
 
 const MenuItem = ({ icon: Icon, label, to, active }) => (
   <Link
@@ -51,7 +52,7 @@ const Sidebar = () => {
       {/* Logo Section */}
       <div className="px-6 py-8 border-b border-gray-100">
         <div className="flex items-center space-x-3">
-          <img src="/logo.png" alt="Green Token" className="h-8 w-8" />
+          <img src={appLogo} alt="Green Token" className="h-8 w-8" />
           <span className="text-xl font-display font-bold text-green-primary">Green Token</span>
         </div>
       </div>

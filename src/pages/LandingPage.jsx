@@ -4,6 +4,7 @@ import { useWeb3 } from '../context/Web3Context'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import CompanyRegistrationModal from '../components/CompanyRegistrationModal'
+import appLogo from '../assets/app_icon.png'
 
 const LandingPage = () => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
@@ -94,8 +95,8 @@ const LandingPage = () => {
       <nav className="container mx-auto px-6 py-6 max-w-[1440px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <img className="h-12 w-auto" src="/logo.png" alt="Green Token" />
-            <span className="ml-3 text-2xl font-display font-bold text-green-primary tracking-tight">Green Token</span>
+            <img className="h-20 w-auto scale-100 transform-none" src={appLogo} alt="Green Chain" />
+            <span className="ml-3 text-2xl font-display font-bold text-green-primary tracking-tight">Green Chain</span>
           </div>
           {account ? (
             <div className="flex items-center gap-2 px-4 py-2 bg-green-light/30 rounded-xl border border-green-primary/20">
@@ -115,7 +116,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <div className="container mx-auto px-6 pt-24 pb-32 max-w-[1440px]">
+      <div className="container mx-auto px-6 pb-32 max-w-[1440px]">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-10">
             <h1 className="font-display text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
